@@ -4,8 +4,6 @@
   <img src="docs/Ico_ClipboardImageSaverApp.png" alt="Application Icon" width="128"/>
 </p>
 
-![Clipboard Example](docs/ClipboardExample.png)
-
 A compact Windows utility built with Python and Tkinter to instantly save images from your clipboard.
 
 ![Application Screenshot](docs/app_screenshot.png)
