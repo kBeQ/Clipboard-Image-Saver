@@ -12,13 +12,13 @@ A compact Windows utility built with Python and Tkinter to instantly save images
 
 ## Features
 
--   **One-Click Insta-Save:** Instantly save the clipboard image to a predefined folder.
--   **Save As... Dialog:** Standard save dialog for choosing a specific name and location.
--   **Persistent Settings:** Remembers your preferences and window position in a `ClipboardSaver.ini` file.
--   **Icon-Based UI:** Clean, compact interface with intuitive icons.
--   **Settings Menu:**
+-   <img src="icon_save.png" width="24" valign="middle">**Save As... Dialog:** Standard save dialog for choosing a specific name and location.
+-   <img src="icon_dwnld.png" width="24" valign="middle">**One-Click Insta-Save:** Instantly save the clipboard image to a predefined folder.
+-   <img src="icon_settings.png" width="24" valign="middle">**Settings Menu:**
     -   "Always on Top" toggle.
     -   Set custom default folders for both "Save As" and "Insta-Save".
+-   **Persistent Settings:** Remembers your preferences and window position in a `ClipboardSaver.ini` file.
+-   **Icon-Based UI:** Clean, compact interface with intuitive icons.
 
 ## Use Cases
 
