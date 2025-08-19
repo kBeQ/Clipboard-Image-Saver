@@ -5,6 +5,7 @@
 </p>
 
 ![Clipboard Example](docs/ClipboardExample.png)
+
 A compact Windows utility built with Python and Tkinter to instantly save images from your clipboard.
 
 ![Application Screenshot](docs/app_screenshot.png)
@@ -21,9 +22,10 @@ A compact Windows utility built with Python and Tkinter to instantly save images
     -   Set custom default folders for both "Save As" and "Insta-Save".
 
 
-## Typical Workflow
+## Use Cases
 
-The real power of this app is speed. It turns the multi-step process of saving a screenshot into a simple two-click action.
+### 1. Instant Screenshots
+This is the classic workflow. It turns saving a screenshot into a simple two-click action.
 
 1.  **Snip:** Use the Windows Snipping Tool (`Win` + `Shift` + `S`) to capture any part of your screen.
 
@@ -31,9 +33,21 @@ The real power of this app is speed. It turns the multi-step process of saving a
 
 2.  **Save:** Click the **Insta-Save** button on the app.
 
+    <img src="icon_dwnld.png" alt="Download Icon">
+
 3.  **Done:** The image is instantly saved with a timestamped filename in your chosen 'Insta-Save' folder (defaults to Downloads).
 
 
-### Prerequisites
-- Python 3.x
-- `pillow` and `pyinstaller` libraries. You can install them using pip:
+### 2. Affinity Photo / Photoshop
+
+![Affinity Photo](docs/Affinity.png)
+![NiceCat](docs/NiceCat.png)
+
+^ I want ^ this specific layer to be saved as it's own file.
+
+I can simply select it in Affinity Photo >> Ctrl+C to copy >> click the app's download button and...
+
+![In The Downloads](docs/InTheDownloads.png)
+
+TADAA!! The layer is immediately saved as a new, perfectly cropped PNG file.
+> **Important Note:** The saved image will have the exact resolution as it appears on your canvas. If you copy a 100x100 pixel layer, you get a 100x100 pixel PNG. This is perfect for exporting assets for web or app development.
