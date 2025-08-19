@@ -1,0 +1,62 @@
+# =============================================================================
+# Python
+# =============================================================================
+
+# Byte-compiled / optimized / C extensions
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.spec
+*.exe
+
+# =============================================================================
+# IDE / Editor Configurations
+# =============================================================================
+
+# Visual Studio Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# Operating System Files
+# =============================================================================
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS
+.DS_Store
+
+# =============================================================================
+# Other
+# =============================================================================
+
+# Log files
+*.log
+
+# =============================================================================
+# Project-Specific Exclusions
+# =============================================================================
+# Ignoring specific project files as requested.
+Info.txt
+build_and_run.bat
+Push.bat
