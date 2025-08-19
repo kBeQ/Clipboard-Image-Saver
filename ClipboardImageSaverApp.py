@@ -53,8 +53,8 @@ class ClipboardImageSaverApp:
         self.SIZE_OPTIONS = [
         ("Tiny (140x65)", "140x65", 32),
         ("Small (170x75)", "170x75", 40),
-        ("Medium (250x110)", "250x110", 60),
-        ("Large (360x160)", "360x160", 85),
+        ("Medium (200x85)", "200x85", 48),
+        ("Large (250x110)", "250x110", 60),
         ("X-Large (520x230)", "520x230", 120),
         ("Huge (720x320)", "720x320", 170)
         ]
