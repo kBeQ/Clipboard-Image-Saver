@@ -3,29 +3,23 @@ from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk, ImageGrab
 import os
 import sys
-# Import the new library for handling .ini files
 import configparser
 from datetime import datetime
 
-# --- NEW: Configuration Manager using .ini files ---
+# --- Configuration Manager (Now simpler) ---
 class ConfigManager:
-    def __init__(self, filename="ClipboardSaver.ini"):
-        self.base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
-        self.filepath = os.path.join(self.base_path, filename)
+    def __init__(self, filepath):
+        self.filepath = filepath
         self.config = configparser.ConfigParser()
-        # Load existing settings or create the file with defaults
         self._load_or_create_settings()
 
     def _load_or_create_settings(self):
-        # Read the file if it exists
         if os.path.exists(self.filepath):
             self.config.read(self.filepath)
         
-        # Ensure the [Settings] section exists
         if 'Settings' not in self.config:
             self.config.add_section('Settings')
 
-        # Check for each setting and apply default if missing
         if not self.config.has_option('Settings', 'default_folder'):
             self.set('default_folder', os.path.expanduser("~/Desktop"))
         if not self.config.has_option('Settings', 'always_on_top'):
@@ -37,19 +31,17 @@ class ConfigManager:
             self.set('window_geometry', "")
 
     def get(self, key):
-        # configparser has specific methods to get typed values
         if key == 'always_on_top':
             return self.config.getboolean('Settings', key)
         else:
             return self.config.get('Settings', key)
 
     def set(self, key, value):
-        # The value must be converted to a string for the .ini file
         self.config.set('Settings', key, str(value))
         with open(self.filepath, 'w') as configfile:
             self.config.write(configfile)
 
-# --- Main Application (No changes needed here) ---
+# --- Main Application ---
 class ClipboardImageSaverApp:
     def __init__(self, root):
         self.root = root
@@ -57,7 +49,17 @@ class ClipboardImageSaverApp:
         self.root.configure(bg="#333333")
         self.root.resizable(False, False)
 
-        self.config = ConfigManager()
+        # --- CORRECTED PATH HANDLING ---
+        # 1. Path for bundled assets (icons) inside the .exe
+        asset_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+
+        # 2. Path for the external .ini file, next to the .exe
+        # sys.executable is the path to the .exe itself
+        config_dir = os.path.dirname(sys.executable)
+        config_path = os.path.join(config_dir, "ClipboardSaver.ini")
+        
+        # --- Initialize Config with the correct external path ---
+        self.config = ConfigManager(filepath=config_path)
         
         saved_geometry = self.config.get('window_geometry')
         if saved_geometry:
@@ -68,27 +70,27 @@ class ClipboardImageSaverApp:
         self.always_on_top_var = tk.BooleanVar(value=self.config.get('always_on_top'))
         self.root.attributes('-topmost', self.always_on_top_var.get())
         self.destination_folder = self.config.get('default_folder')
-
-        base_path = self.config.base_path
         
         try:
-            self.root.iconbitmap(os.path.join(base_path, "Ico_ClipboardImageSaverApp.ico"))
+            # Use the asset_path for the main window icon
+            self.root.iconbitmap(os.path.join(asset_path, "Ico_ClipboardImageSaverApp.ico"))
         except Exception as e:
             print(f"Failed to load window icon: {e}")
 
         try:
+            # Use the asset_path for all button and menu icons
             FIXED_ICON_SIZE = (48, 48)
-            img_save = Image.open(os.path.join(base_path, "icon_save.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
-            img_settings = Image.open(os.path.join(base_path, "icon_settings.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
-            img_dwnld = Image.open(os.path.join(base_path, "icon_dwnld.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
+            img_save = Image.open(os.path.join(asset_path, "icon_save.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
+            img_settings = Image.open(os.path.join(asset_path, "icon_settings.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
+            img_dwnld = Image.open(os.path.join(asset_path, "icon_dwnld.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
             
             self.save_icon = ImageTk.PhotoImage(img_save)
             self.settings_icon = ImageTk.PhotoImage(img_settings)
             self.dwnld_icon = ImageTk.PhotoImage(img_dwnld)
 
             MENU_ICON_SIZE = (16, 16)
-            menu_img_save = Image.open(os.path.join(base_path, "icon_save.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
-            menu_img_dwnld = Image.open(os.path.join(base_path, "icon_dwnld.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
+            menu_img_save = Image.open(os.path.join(asset_path, "icon_save.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
+            menu_img_dwnld = Image.open(os.path.join(asset_path, "icon_dwnld.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
             
             self.menu_save_icon = ImageTk.PhotoImage(menu_img_save)
             self.menu_dwnld_icon = ImageTk.PhotoImage(menu_img_dwnld)
