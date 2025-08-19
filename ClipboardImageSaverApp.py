@@ -18,12 +18,11 @@ class ConfigManager:
             with open(self.filepath, 'r') as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            # Define default user downloads folder
             downloads_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
             return {
                 'default_folder': os.path.expanduser("~/Desktop"),
                 'always_on_top': False,
-                'quick_save_folder': downloads_folder # New setting for Insta Save
+                'quick_save_folder': downloads_folder
             }
 
     def get(self, key):
@@ -39,8 +38,7 @@ class ClipboardImageSaverApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Clipboard Saver")
-        # Widen the window for the fourth button
-        self.root.geometry("240x80")
+        self.root.geometry("190x80")
         self.root.configure(bg="#333333")
         self.root.resizable(False, False)
 
@@ -58,48 +56,64 @@ class ClipboardImageSaverApp:
             print(f"Failed to load window icon: {e}")
 
         try:
+            # --- Load icons for the main buttons ---
             FIXED_ICON_SIZE = (48, 48)
-            img_folder = Image.open(os.path.join(base_path, "icon_folder.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
             img_save = Image.open(os.path.join(base_path, "icon_save.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
             img_settings = Image.open(os.path.join(base_path, "icon_settings.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
             img_dwnld = Image.open(os.path.join(base_path, "icon_dwnld.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
             
-            self.folder_icon = ImageTk.PhotoImage(img_folder)
             self.save_icon = ImageTk.PhotoImage(img_save)
             self.settings_icon = ImageTk.PhotoImage(img_settings)
             self.dwnld_icon = ImageTk.PhotoImage(img_dwnld)
+
+            # --- Load and resize icons for the dropdown menu ---
+            MENU_ICON_SIZE = (16, 16) # A standard, small size for menus
+            menu_img_save = Image.open(os.path.join(base_path, "icon_save.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
+            menu_img_dwnld = Image.open(os.path.join(base_path, "icon_dwnld.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
+            
+            # We must keep a reference to these to prevent garbage collection
+            self.menu_save_icon = ImageTk.PhotoImage(menu_img_save)
+            self.menu_dwnld_icon = ImageTk.PhotoImage(menu_img_dwnld)
+
         except Exception as e:
             messagebox.showerror("Icon Error", f"Could not load button icons.\nError: {e}")
             sys.exit()
 
-        # Configure all four columns
-        for i in range(4):
+        for i in range(3):
             self.root.grid_columnconfigure(i, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
 
         # --- Widgets ---
-        self.select_dest_button = tk.Button(root, image=self.folder_icon, command=self.select_destination_folder, bg="#333333", relief=tk.FLAT, bd=0, activebackground="#444444")
-        self.select_dest_button.grid(row=0, column=0, sticky="nsew")
-
         self.save_as_button = tk.Button(root, image=self.save_icon, command=self.save_as, bg="#333333", relief=tk.FLAT, bd=0, activebackground="#444444")
-        self.save_as_button.grid(row=0, column=1, sticky="nsew")
+        self.save_as_button.grid(row=0, column=0, sticky="nsew")
         
-        # New Insta Save Button
         self.insta_save_button = tk.Button(root, image=self.dwnld_icon, command=self.insta_save, bg="#333333", relief=tk.FLAT, bd=0, activebackground="#444444")
-        self.insta_save_button.grid(row=0, column=2, sticky="nsew")
+        self.insta_save_button.grid(row=0, column=1, sticky="nsew")
 
         self.settings_button = tk.Menubutton(root, image=self.settings_icon, bg="#333333", relief=tk.FLAT, bd=0, activebackground="#444444")
-        self.settings_button.grid(row=0, column=3, sticky="nsew")
+        self.settings_button.grid(row=0, column=2, sticky="nsew")
 
         self.settings_menu = tk.Menu(self.settings_button, tearoff=0, bg="#555555", fg="white")
         self.settings_menu.add_checkbutton(label="Always on Top", variable=self.always_on_top_var, command=self.toggle_always_on_top)
         self.settings_menu.add_separator()
-        self.settings_menu.add_command(label="Set 'Save As' Folder...", command=self.set_default_directory)
-        self.settings_menu.add_command(label="Set 'Insta-Save' Folder...", command=self.set_quick_save_directory)
+        
+        # --- Updated Menu Commands with Icons ---
+        self.settings_menu.add_command(
+            label="Set 'Save As' Folder...", 
+            image=self.menu_save_icon,      # Use the small icon
+            compound=tk.LEFT,               # Display image to the left of the text
+            command=self.set_default_directory
+        )
+        self.settings_menu.add_command(
+            label="Set 'Insta-Save' Folder...", 
+            image=self.menu_dwnld_icon,     # Use the small icon
+            compound=tk.LEFT,               # Display image to the left of the text
+            command=self.set_quick_save_directory
+        )
         self.settings_button['menu'] = self.settings_menu
 
         self.status_bar = tk.Label(root, text=os.path.basename(self.destination_folder), bg="#222222", fg="white", anchor="w", padx=5)
-        self.status_bar.grid(row=1, column=0, columnspan=4, sticky="ew")
+        self.status_bar.grid(row=1, column=0, columnspan=3, sticky="ew")
 
     def toggle_always_on_top(self):
         is_on_top = self.always_on_top_var.get()
@@ -119,12 +133,6 @@ class ClipboardImageSaverApp:
         if folder_path:
             self.config.set('quick_save_folder', folder_path)
             messagebox.showinfo("Settings Saved", f"'Insta-Save' folder set to:\n{folder_path}")
-
-    def select_destination_folder(self):
-        folder_path = filedialog.askdirectory(title="Change Current 'Save As' Folder", initialdir=self.destination_folder)
-        if folder_path:
-            self.destination_folder = folder_path
-            self.status_bar.config(text=os.path.basename(folder_path))
 
     def save_as(self):
         try:
@@ -154,7 +162,6 @@ class ClipboardImageSaverApp:
             
             image.save(save_path, "PNG")
 
-            # Give user feedback on the status bar
             original_text = os.path.basename(self.destination_folder)
             self.status_bar.config(text=f"Saved to {os.path.basename(quick_save_folder)}!")
             self.root.after(2500, lambda: self.status_bar.config(text=original_text))
