@@ -3,47 +3,68 @@ from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk, ImageGrab
 import os
 import sys
-import json
+# Import the new library for handling .ini files
+import configparser
 from datetime import datetime
 
-# --- Configuration Manager ---
+# --- NEW: Configuration Manager using .ini files ---
 class ConfigManager:
-    def __init__(self, filename="settings.json"):
+    def __init__(self, filename="ClipboardSaver.ini"):
         self.base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
         self.filepath = os.path.join(self.base_path, filename)
-        self.settings = self._load_settings()
+        self.config = configparser.ConfigParser()
+        # Load existing settings or create the file with defaults
+        self._load_or_create_settings()
 
-    def _load_settings(self):
-        try:
-            with open(self.filepath, 'r') as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+    def _load_or_create_settings(self):
+        # Read the file if it exists
+        if os.path.exists(self.filepath):
+            self.config.read(self.filepath)
+        
+        # Ensure the [Settings] section exists
+        if 'Settings' not in self.config:
+            self.config.add_section('Settings')
+
+        # Check for each setting and apply default if missing
+        if not self.config.has_option('Settings', 'default_folder'):
+            self.set('default_folder', os.path.expanduser("~/Desktop"))
+        if not self.config.has_option('Settings', 'always_on_top'):
+            self.set('always_on_top', False)
+        if not self.config.has_option('Settings', 'quick_save_folder'):
             downloads_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
-            return {
-                'default_folder': os.path.expanduser("~/Desktop"),
-                'always_on_top': False,
-                'quick_save_folder': downloads_folder
-            }
+            self.set('quick_save_folder', downloads_folder)
+        if not self.config.has_option('Settings', 'window_geometry'):
+            self.set('window_geometry', "")
 
     def get(self, key):
-        return self.settings.get(key)
+        # configparser has specific methods to get typed values
+        if key == 'always_on_top':
+            return self.config.getboolean('Settings', key)
+        else:
+            return self.config.get('Settings', key)
 
     def set(self, key, value):
-        self.settings[key] = value
-        with open(self.filepath, 'w') as f:
-            json.dump(self.settings, f, indent=4)
+        # The value must be converted to a string for the .ini file
+        self.config.set('Settings', key, str(value))
+        with open(self.filepath, 'w') as configfile:
+            self.config.write(configfile)
 
-# --- Main Application ---
+# --- Main Application (No changes needed here) ---
 class ClipboardImageSaverApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Clipboard Saver")
-        self.root.geometry("190x80")
         self.root.configure(bg="#333333")
         self.root.resizable(False, False)
 
         self.config = ConfigManager()
         
+        saved_geometry = self.config.get('window_geometry')
+        if saved_geometry:
+            self.root.geometry(saved_geometry)
+        else:
+            self.root.geometry("190x80")
+
         self.always_on_top_var = tk.BooleanVar(value=self.config.get('always_on_top'))
         self.root.attributes('-topmost', self.always_on_top_var.get())
         self.destination_folder = self.config.get('default_folder')
@@ -56,7 +77,6 @@ class ClipboardImageSaverApp:
             print(f"Failed to load window icon: {e}")
 
         try:
-            # --- Load icons for the main buttons ---
             FIXED_ICON_SIZE = (48, 48)
             img_save = Image.open(os.path.join(base_path, "icon_save.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
             img_settings = Image.open(os.path.join(base_path, "icon_settings.png")).resize(FIXED_ICON_SIZE, Image.Resampling.LANCZOS)
@@ -66,15 +86,12 @@ class ClipboardImageSaverApp:
             self.settings_icon = ImageTk.PhotoImage(img_settings)
             self.dwnld_icon = ImageTk.PhotoImage(img_dwnld)
 
-            # --- Load and resize icons for the dropdown menu ---
-            MENU_ICON_SIZE = (16, 16) # A standard, small size for menus
+            MENU_ICON_SIZE = (16, 16)
             menu_img_save = Image.open(os.path.join(base_path, "icon_save.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
             menu_img_dwnld = Image.open(os.path.join(base_path, "icon_dwnld.png")).resize(MENU_ICON_SIZE, Image.Resampling.LANCZOS)
             
-            # We must keep a reference to these to prevent garbage collection
             self.menu_save_icon = ImageTk.PhotoImage(menu_img_save)
             self.menu_dwnld_icon = ImageTk.PhotoImage(menu_img_dwnld)
-
         except Exception as e:
             messagebox.showerror("Icon Error", f"Could not load button icons.\nError: {e}")
             sys.exit()
@@ -83,7 +100,6 @@ class ClipboardImageSaverApp:
             self.root.grid_columnconfigure(i, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
 
-        # --- Widgets ---
         self.save_as_button = tk.Button(root, image=self.save_icon, command=self.save_as, bg="#333333", relief=tk.FLAT, bd=0, activebackground="#444444")
         self.save_as_button.grid(row=0, column=0, sticky="nsew")
         
@@ -96,24 +112,18 @@ class ClipboardImageSaverApp:
         self.settings_menu = tk.Menu(self.settings_button, tearoff=0, bg="#555555", fg="white")
         self.settings_menu.add_checkbutton(label="Always on Top", variable=self.always_on_top_var, command=self.toggle_always_on_top)
         self.settings_menu.add_separator()
-        
-        # --- Updated Menu Commands with Icons ---
-        self.settings_menu.add_command(
-            label="Set 'Save As' Folder...", 
-            image=self.menu_save_icon,      # Use the small icon
-            compound=tk.LEFT,               # Display image to the left of the text
-            command=self.set_default_directory
-        )
-        self.settings_menu.add_command(
-            label="Set 'Insta-Save' Folder...", 
-            image=self.menu_dwnld_icon,     # Use the small icon
-            compound=tk.LEFT,               # Display image to the left of the text
-            command=self.set_quick_save_directory
-        )
+        self.settings_menu.add_command(label="Set 'Save As' Folder...", image=self.menu_save_icon, compound=tk.LEFT, command=self.set_default_directory)
+        self.settings_menu.add_command(label="Set 'Insta-Save' Folder...", image=self.menu_dwnld_icon, compound=tk.LEFT, command=self.set_quick_save_directory)
         self.settings_button['menu'] = self.settings_menu
 
         self.status_bar = tk.Label(root, text=os.path.basename(self.destination_folder), bg="#222222", fg="white", anchor="w", padx=5)
         self.status_bar.grid(row=1, column=0, columnspan=3, sticky="ew")
+
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def on_closing(self):
+        self.config.set('window_geometry', self.root.geometry())
+        self.root.destroy()
 
     def toggle_always_on_top(self):
         is_on_top = self.always_on_top_var.get()
@@ -157,15 +167,13 @@ class ClipboardImageSaverApp:
             save_path = os.path.join(quick_save_folder, filename)
 
             image = ImageGrab.grabclipboard()
-            if image is None:
-                raise ValueError("No image found on clipboard.")
+            if image is None: raise ValueError("No image found on clipboard.")
             
             image.save(save_path, "PNG")
 
             original_text = os.path.basename(self.destination_folder)
             self.status_bar.config(text=f"Saved to {os.path.basename(quick_save_folder)}!")
             self.root.after(2500, lambda: self.status_bar.config(text=original_text))
-
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
