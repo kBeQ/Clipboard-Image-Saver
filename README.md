@@ -46,7 +46,7 @@ A common task in graphic design is exporting a single element as its own file. T
       <img src="docs/Affinity.png" alt="Selecting a layer in Affinity Photo" width="500"/>
     </p>
 
-2.  **Insta-Save:** Click the **Insta-Save** button in Clipboard Image Saver.
+2.  **Insta-Save:** Click the <img src="icon_dwnld.png" width="24" valign="middle"> **Insta-Save** button in Clipboard Image Saver.
 
 3.  **TADAA!! ✨** The layer is immediately saved as a new, perfectly cropped PNG file.
     <p align="center">
